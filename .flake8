@@ -1,0 +1,102 @@
+# Flake8 configuration for Intel HEX Viewer
+# See: https://flake8.pycqa.org/en/latest/user/configuration.html
+
+[flake8]
+# Maximum line length
+max-line-length = 88
+
+# Extend ignore list (in addition to defaults)
+extend-ignore = 
+    # E203: whitespace before ':' (conflicts with black)
+    E203,
+    # W503: line break before binary operator (conflicts with black)
+    W503,
+    # E501: line too long (handled by black)
+    E501,
+    # F401: imported but unused (handled by autoflake)
+    F401
+
+# Exclude directories
+exclude = 
+    .git,
+    __pycache__,
+    .pytest_cache,
+    .mypy_cache,
+    .tox,
+    .venv,
+    venv,
+    build,
+    dist,
+    *.egg-info,
+    .eggs,
+    docs/_build,
+    examples,
+    tests/fixtures
+
+# File patterns to include
+filename = 
+    *.py
+
+# Enable specific error codes
+select = 
+    # Pyflakes
+    F,
+    # Pycodestyle errors
+    E,
+    # Pycodestyle warnings
+    W,
+    # McCabe complexity
+    C
+
+# Maximum complexity
+max-complexity = 10
+
+# Docstring conventions
+docstring-convention = google
+
+# Import order style
+import-order-style = google
+
+# Application import names
+application-import-names = intelhex_viewer
+
+# Per-file ignores
+per-file-ignores = 
+    # Tests can have longer lines and unused imports
+    tests/*:E501,F401,F811
+    # __init__.py files can have unused imports
+    __init__.py:F401
+    # Setup files can have longer lines
+    setup.py:E501
+    # Build scripts can have longer lines
+    build_*.py:E501
+    # Examples can have unused imports
+    examples/*:F401
+
+# Builtins
+builtins = 
+    _
+
+# Show source code for errors
+show-source = True
+
+# Count errors
+count = True
+
+# Show statistics
+statistics = True
+
+# Benchmark
+benchmark = False
+
+# Jobs (0 = auto-detect)
+jobs = 0
+
+# Output format
+format = default
+
+# Tee output
+tee = False
+
+# Hang closing bracket
+hang-closing = False 

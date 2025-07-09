@@ -1,6 +1,12 @@
 # Intel HEX Viewer
 
-A comprehensive GUI application for viewing and analyzing Intel HEX files with advanced features including C structure parsing, symbol navigation, and customizable display options.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.6+](https://img.shields.io/badge/python-3.6+-blue.svg)](https://www.python.org/downloads/)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)](https://github.com/contributors/intelhex-viewer)
+
+A comprehensive, open-source GUI application for viewing and analyzing Intel HEX files with advanced features including C structure parsing, symbol navigation, and customizable display options.
+
+**🎉 Now Open Source!** This project has been restructured into a modular, contributor-friendly codebase. We welcome contributions from the community!
 
 ## Features
 
@@ -64,16 +70,28 @@ pip install -r requirements.txt
 pyinstaller --onefile --windowed --name=IntelHexViewer hex_viewer_full.py
 ```
 
-## Usage
+## Quick Start
 
 ### Running from Source
+
 ```bash
-python hex_viewer_full.py
+# Clone the repository
+git clone https://github.com/contributors/intelhex-viewer.git
+cd intelhex-viewer
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the application
+python hex_viewer.py
 ```
 
-### Running Binary
-- **Windows**: Double-click `IntelHexViewer.exe`
-- **Linux**: `./IntelHexViewer`
+### Running Binary (Pre-built)
+- **Windows**: Double-click `dist/windows/IntelHexViewer.exe`
+- **Linux**: `./dist/linux/IntelHexViewer`
+
+### Legacy Version
+The original monolithic version is still available as `hex_viewer_full.py` for backward compatibility.
 
 ### Basic Workflow
 
@@ -103,22 +121,43 @@ struct firmware_header {
 4. Click "View Values" to see interpreted values
 5. Click "Parse & Apply" to show values in main hex view
 
-## File Structure
+## Project Structure
+
+The project has been restructured into a modular, maintainable architecture:
 
 ```
-intelhex/
-├── hex_viewer_full.py      # Main application
-├── requirements.txt        # Python dependencies
-├── build_binary.py        # Cross-platform build script
-├── build_windows.bat      # Windows build script
-├── build_linux.sh         # Linux build script
-├── README.md              # This file
-└── dist/                  # Generated binaries
+intelhex-viewer/
+├── src/                      # 🔧 Core source code (modular design)
+│   ├── __init__.py          # Package initialization
+│   ├── main_app.py          # Main application coordinator
+│   ├── hex_parser.py        # Intel HEX file operations
+│   ├── structure_parser.py  # C structure parsing & interpretation
+│   ├── symbol_manager.py    # Symbol/tag management
+│   └── gui_components.py    # Reusable GUI components
+├── hex_viewer.py            # 🚀 New modular entry point
+├── hex_viewer_full.py       # 📜 Legacy monolithic version
+├── requirements.txt         # Python dependencies
+├── LICENSE                  # MIT license
+├── CONTRIBUTING.md          # Contribution guidelines
+├── README.md               # This file
+├── build/                  # Build system
+│   ├── build_windows.bat
+│   ├── build_linux.sh
+│   └── build_binary.py
+└── dist/                   # Generated binaries
     ├── windows/
     │   └── IntelHexViewer.exe
     └── linux/
         └── IntelHexViewer
 ```
+
+### 🏗️ Modular Architecture Benefits
+
+- **🔍 Easy to Understand**: Each module has a clear, single responsibility
+- **🛠️ Easy to Extend**: Add new features without touching existing code
+- **🐛 Easy to Debug**: Isolated components make troubleshooting simpler
+- **🤝 Contributor Friendly**: Clear separation makes it easy for new contributors
+- **✅ Testable**: Each module can be unit tested independently
 
 ## Dependencies
 
@@ -161,10 +200,52 @@ intelhex/
 - If binary is too large: Remove `--onefile` flag to create a directory instead
 - If binary won't run: Check if all dependencies are included
 
-## License
+## 🤝 Contributing
 
-This project is open source. Feel free to modify and distribute.
+We welcome contributions from the community! This project is designed to be contributor-friendly.
 
-## Contributing
+### 🚀 Quick Contribution Guide
 
-Feel free to submit issues and pull requests for improvements and bug fixes. 
+1. **Fork** the repository
+2. **Clone** your fork: `git clone https://github.com/YOUR_USERNAME/intelhex-viewer.git`
+3. **Create** a feature branch: `git checkout -b feature/amazing-feature`
+4. **Make** your changes in the modular `src/` directory
+5. **Test** your changes: `python hex_viewer.py`
+6. **Commit** your changes: `git commit -m "Add amazing feature"`
+7. **Push** to your fork: `git push origin feature/amazing-feature`
+8. **Submit** a Pull Request
+
+### 🎯 Areas Where We Need Help
+
+- **🐛 Bug Fixes**: Report and fix issues
+- **✨ New Features**: Hex analysis tools, export formats, UI improvements
+- **📚 Documentation**: Code comments, user guides, examples
+- **🧪 Testing**: Unit tests, integration tests, edge cases
+- **🌍 Internationalization**: Multi-language support
+- **🎨 UI/UX**: Design improvements, accessibility features
+
+### 📋 Development Guidelines
+
+- **Follow PEP 8** Python style guidelines
+- **Add docstrings** to all public functions and classes
+- **Include type hints** for better code clarity
+- **Write tests** for new functionality
+- **Update documentation** when adding features
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed contribution guidelines.
+
+### 🏆 Contributors
+
+We appreciate all contributors! Contributors will be recognized in the project.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+### Why Open Source?
+
+We believe that open source software benefits everyone:
+- **🔍 Transparency**: See exactly how the software works
+- **🛡️ Security**: Community review improves security
+- **🚀 Innovation**: Collective contributions drive innovation
+- **🎓 Learning**: Great way to learn and improve coding skills 
