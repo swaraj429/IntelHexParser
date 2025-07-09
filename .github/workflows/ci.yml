@@ -1,0 +1,255 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  release:
+    types: [ published ]
+
+jobs:
+  # ===== Code Quality Checks =====
+  lint:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+    
+    - name: Lint with flake8
+      run: |
+        flake8 intelhex_viewer/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 intelhex_viewer/ tests/ --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+    
+    - name: Format check with black
+      run: |
+        black --check intelhex_viewer/ tests/
+    
+    - name: Import sorting check with isort
+      run: |
+        isort --check-only intelhex_viewer/ tests/
+    
+    - name: Type checking with mypy
+      run: |
+        mypy intelhex_viewer/
+      continue-on-error: true  # Allow type checking to fail without stopping CI
+
+  # ===== Unit Tests =====
+  test:
+    name: Unit Tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.8', '3.9', '3.10', '3.11']
+        exclude:
+          # Reduce matrix size for faster builds
+          - os: macos-latest
+            python-version: '3.8'
+          - os: windows-latest
+            python-version: '3.8'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install system dependencies (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-tk xvfb
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+    
+    - name: Run tests with pytest
+      run: |
+        pytest tests/ -v --tb=short
+      env:
+        DISPLAY: ':99'  # For GUI testing on Linux
+    
+    - name: Run tests with coverage
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+      run: |
+        pytest tests/ --cov=intelhex_viewer --cov-report=xml --cov-report=html
+    
+    - name: Upload coverage to Codecov
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  # ===== Build Tests =====
+  build:
+    name: Build Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install system dependencies (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-tk
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+    
+    - name: Build with PyInstaller (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        pyinstaller --onefile --windowed --name intel-hex-viewer hex_viewer.py
+    
+    - name: Build with PyInstaller (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        pyinstaller --onefile --name intel-hex-viewer hex_viewer.py
+    
+    - name: Build with PyInstaller (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        pyinstaller --onefile --windowed --name intel-hex-viewer hex_viewer.py
+    
+    - name: Test executable (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        dist\intel-hex-viewer.exe --version
+    
+    - name: Test executable (Linux/macOS)
+      if: runner.os != 'Windows'
+      run: |
+        chmod +x dist/intel-hex-viewer
+        ./dist/intel-hex-viewer --version
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: intel-hex-viewer-${{ matrix.os }}
+        path: dist/
+        retention-days: 7
+
+  # ===== Package Build =====
+  package:
+    name: Package Build
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install build dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine
+    
+    - name: Build package
+      run: |
+        python -m build
+    
+    - name: Check package
+      run: |
+        twine check dist/*
+    
+    - name: Upload package artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: python-package
+        path: dist/
+        retention-days: 30
+
+  # ===== Release Build =====
+  release:
+    name: Release Build
+    runs-on: ${{ matrix.os }}
+    if: github.event_name == 'release' && github.event.action == 'published'
+    needs: [lint, test, build]
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install system dependencies (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-tk
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+    
+    - name: Build release executable
+      run: |
+        python build_binary.py --name intel-hex-viewer
+    
+    - name: Compress executable (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        7z a intel-hex-viewer-windows.zip dist\intel-hex-viewer.exe
+    
+    - name: Compress executable (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        tar -czf intel-hex-viewer-linux.tar.gz -C dist intel-hex-viewer
+    
+    - name: Compress executable (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        tar -czf intel-hex-viewer-macos.tar.gz -C dist intel-hex-viewer
+    
+    - name: Upload release assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: intel-hex-viewer-${{ runner.os == 'Windows' && 'windows.zip' || runner.os == 'Linux' && 'linux.tar.gz' || 'macos.tar.gz' }}
+        asset_name: intel-hex-viewer-${{ runner.os == 'Windows' && 'windows.zip' || runner.os == 'Linux' && 'linux.tar.gz' || 'macos.tar.gz' }}
+        asset_content_type: application/octet-stream 
